@@ -1,4 +1,5 @@
 var express = require('express');
+var qdb = require('./lib/quotes.js');
 
 var app = express();
 
@@ -15,12 +16,9 @@ app.set('view engine', 'handlebars');
 app.use(express.static(__dirname + '/public'));
 
 
-var dinCont = ["Dynamic Content 1", "Dynamic Content 2", "Dynamic Content 3", "Dynamic Content 4", "Dynamic Content 5"]
-
 // setup routes
 app.get('/', function (req, res) {
-    var rc = dinCont[Math.floor(Math.random() * dinCont.length)];
-    res.render('home', {content: rc});
+    res.render('home', { quote: qdb.getQuote() });
 });
 
 app.get('/about', function (req, res) {
@@ -35,7 +33,7 @@ app.use(function (req, res) {
 
 // custom 500 page
 app.use(function (error, req, res, next) {
-    console.error(err.stack);
+    console.error(error.stack);
     res.status(500);
     res.render('500');
 });

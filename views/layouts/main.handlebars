@@ -1,10 +1,35 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Tiles</title>
-    </head>
-    <body>
-        <header><img src="/img/logo.png" alt="Tiles"></header>
-        {{{body}}}
-    </body>
+
+<head>
+    <title>Tiles</title>
+    {{#if showTests}}
+        <link rel="stylesheet" href="/vendor/mocha.css" />
+    {{/if}}
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+</head>
+
+<body>
+    <header><img src="/img/logo.png" alt="Tiles" width="50em" height="50em"></header>
+    {{{body}}}
+
+{{!-- Setup Global Page Tests --}}
+    {{#if showTests}}
+        <div id="mocha"></div>
+        <script src="/vendor/mocha.js"></script>
+        <script src="/vendor/chai.js"></script>
+        <script>
+            mocha.ui('tdd');
+            var assert = chai.assert;
+            var expect = chai.expect;
+        </script>
+        <script src="/qa/tests-global.js"></script>
+
+        {{#if pageTestScript}}
+            <script src="{{pageTestScript}}"></script>
+        {{/if}}
+        <script>mocha.run();</script>
+    {{/if}}
+</body>
+
 </html>

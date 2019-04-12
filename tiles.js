@@ -15,6 +15,10 @@ app.set('view engine', 'handlebars');
 
 app.use(express.static(__dirname + '/public'));
 
+app.use(function(req, res, next){
+    res.locals.showTests = app.get('env') !== 'production' && req.query.test === '1';
+    next();
+});
 
 // setup routes
 app.get('/', function (req, res) {
@@ -22,7 +26,15 @@ app.get('/', function (req, res) {
 });
 
 app.get('/about', function (req, res) {
-    res.render('about');
+    res.render('about', { pageTestScript: '/qa/tests-about.js' });    
+});
+
+app.get('/inspirations/virtualroom', function(req, res){
+    res.render('inspirations/virtualroom', { pageTestScript: '/../qa/tests-crosspage.js' });
+});
+
+app.get('/inspirations/request-rate', function(req, res){
+    res.render('inspirations/request-rate');
 });
 
 // custom 404 page

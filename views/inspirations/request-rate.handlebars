@@ -1,0 +1,12 @@
+<h1>Request Rate</h1>
+<form>
+    <input type="hidden" id="referrer" name="referrer">
+    Name: <input type="text" id="name" name="name">
+    Email: <input type="email" id="email" name="email">
+    <input type="submit" value="Submit">
+</form>
+<script>
+    $(document).ready(function(){
+        $('input[name="referrer"]').val(document.referrer);
+    });
+</script>

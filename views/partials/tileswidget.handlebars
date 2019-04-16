@@ -1,0 +1,10 @@
+<div class="tilesWidget" style="display:inline-flex;">
+	{{#each partials.tiles.tdata}}
+		<div class="location" style="margin-left:1em;">
+			<a href="{{tilesUrl}}">
+                <h3>{{name}} - {{tlength}} x {{twidth}}</h3>
+				<img src="{{iconUrl}}" width="150" height="150" alt="{{name}}">
+			</a>
+		</div>
+	{{/each}}
+</div>

@@ -4,8 +4,14 @@
   "description": "",
   "main": "tiles.js",
   "dependencies": {
+    "bootstrap": "^4.3.1",
+    "cookie-parser": "^1.4.4",
+    "express": "^4.16.4",
+    "express-logger": "0.0.3",
+    "express-session": "^1.16.1",
     "express3-handlebars": "^0.5.2",
-    "express": "^4.16.4"
+    "formidable": "^1.2.1",
+    "morgan": "^1.9.1"
   },
   "devDependencies": {
     "chai": "^4.2.0",
@@ -14,7 +20,7 @@
     "grunt-cli": "^1.3.2",
     "grunt-contrib-jshint": "^2.1.0",
     "grunt-exec": "^3.0.0",
-    "mocha": "^6.1.2",
+    "mocha": "^6.1.3",
     "selenium-webdriver": "^4.0.0-alpha.1"
   },
   "scripts": {

@@ -10,7 +10,7 @@ module.exports = function (grunt) {
     // configure plaugins
     grunt.initConfig({
         cafemocha: {
-            all: { src: 'qa-tests-*.js', options: 'tdd' }
+            all: { src: 'qa/tests-*.js', options: { ui: 'tdd' } }
         },
         jshint: {
             app: ['tiles.js', 'public/js/**/*.js', 'lib/**/*.js'],

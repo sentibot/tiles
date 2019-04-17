@@ -21,8 +21,8 @@ app.use(function(req, res, next){
         console.log('DOMAIN ERROR:\n', err.stack);
         try {
             // shotdown process in 5s
-            setTimeout(() => {
-                console.error('Shuting down...')
+            setTimeout(function() {
+                console.error('Shuting down...');
                 process.exit(1);
             }, 5000);
 
@@ -146,10 +146,10 @@ app.use(function (req, res, next) {
 
 // [******************** Mock Upload Function ********************]
 
-function UploadImages() { };
+function UploadImages() { }
 UploadImages.prototype.save = function (cb) {
     cb();
-}
+};
 
 // [******************** Mock Upload Function ********************]
 
@@ -181,12 +181,12 @@ app.post('/collections/tile-photos', function (req, res) {
         type: '',
         intro: '',
         message: ''
-    }
+    };
     res.locals.flash = {
         type: '',
         intro: '',
         message: ''
-    }
+    };
     var isAjaxReq = req.xhr;
 
     var form = new formidable.IncomingForm();

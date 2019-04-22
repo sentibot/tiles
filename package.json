@@ -12,6 +12,7 @@
     "express3-handlebars": "^0.5.2",
     "formidable": "^1.2.1",
     "loadtest": "^3.0.7",
+    "mongoose": "^5.5.2",
     "morgan": "^1.9.1"
   },
   "devDependencies": {

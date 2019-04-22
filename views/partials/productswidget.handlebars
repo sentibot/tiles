@@ -1,0 +1,17 @@
+<div class="productsWidget" style="display:inline-flex;">
+    {{#each tiles}}
+    <div class="location" style="margin-left:1em;">
+        <a href="#">
+            <h3>{{name}} - {{length}} x {{width}}</h3>
+            <img src="{{icon}}" width="150" height="150" alt="{{name}}">
+        </a>
+    
+    {{#if inStock}}
+    <span class="price">{{price}}</span>
+    <a href="/cart/add?id={{id}}" class="btn btn-primary">Buy Now!</a>
+    {{else}}
+    <span class="outOfSeason">Out of stock!
+        <a href="/notify-me-when-in-stock?id={{id}}">Notify me when this tile is back in stock.</a></div>
+        {{/if}}
+        {{/each}}
+</div>

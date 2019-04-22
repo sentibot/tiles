@@ -5,6 +5,7 @@ var formidable = require('formidable');
 var credentials = require('./credentials');
 var cookies = require('cookie-parser');
 var session = require('express-session');
+var Tile = require('./models/tile')
 
 var app = express();
 
@@ -12,23 +13,23 @@ app.set('port', process.env.PORT || 3000);
 
 // [******************** Global Error Handling ********************] 
 
-app.use(function(req, res, next){
+app.use(function (req, res, next) {
     // create domain for incoming request
     var domain = require('domain').create();
 
     // add error event to this domain
-    domain.on('error', function(err){
+    domain.on('error', function (err) {
         console.log('DOMAIN ERROR:\n', err.stack);
         try {
             // shotdown process in 5s
-            setTimeout(function() {
+            setTimeout(function () {
                 console.error('Shuting down...');
                 process.exit(1);
             }, 5000);
 
             // disconnect worker from cluster
             var worker = require('cluster').worker;
-            if(worker){
+            if (worker) {
                 worker.disconnect();
             }
 
@@ -87,9 +88,9 @@ app.use(function (req, res, next) {
 });
 
 // [******************** Middlewere to check on workers ********************] 
-app.use(function(req, res, next){
+app.use(function (req, res, next) {
     var cluster = require('cluster');
-    if(cluster.isWorker){
+    if (cluster.isWorker) {
         console.log('CLUSTER: Worker %d received work', cluster.worker.id);
     }
     next();
@@ -142,6 +143,43 @@ app.use(function (req, res, next) {
     delete req.session.flash;
     next();
 });
+
+//  ============ DB Config ============
+
+var mongoose = require('mongoose');
+var options = {
+    server: {
+        socketOptions: { keepAlive: 1 }
+    }
+}
+
+switch (app.get('env')) {
+    case 'development':
+        mongoose.connect(credentials.mongo.development.connectionString)
+        break;
+    case 'production':
+        mongoose.connect(credentials.mongo.production.connectionString)
+        break;
+    default:
+        throw new Error('Execution environment ' + app.get('env') + ' not found');
+        break;
+}
+
+//  ============ Mock Seed DB ============
+Tile.find(function (err, tiles) {
+    if (tiles.length) { return; }; // don't reseed if there are tiles in db already
+
+    new Tile({ id: 1, name: 'Tile 1', length: 40, width: 20, inStock: true, material: '', um: '', price: 40000, tags: ['tag1', 'tag2', 'tag3'], icon: 'https://s7d1.scene7.com/is/image/TileShop/616148?$Product_Search$' }).save();
+    new Tile({ id: 2, name: 'Tile 2', length: 35, width: 15, inStock: false, material: '', um: '', price: 34513, tags: ['tag4', 'tag5', 'tag6'], icon: 'https://s7d1.scene7.com/is/image/TileShop/650341?$Product_Search$' }).save();
+    new Tile({ id: 3, name: 'Tile 3', length: 120, width: 60, inStock: true, material: '', um: '', price: 118465, tags: ['tag7', 'tag8', 'tag9'], icon: 'https://s7d1.scene7.com/is/image/TileShop/650340?$Product_Search$' }).save();
+    new Tile({ id: 4, name: 'Tile 4', length: 50, width: 25, inStock: false, material: '', um: '', price: 83752, tags: ['tag10', 'tag11', 'tag12'], icon: 'https://s7d1.scene7.com/is/image/TileShop/650340?$Product_Search$' }).save();
+});
+//  ============ Mock Seed DB ============
+
+
+
+//  ============ DB Config ============
+
 // [******************** Middlewere -> to be moved into the right place ********************]
 
 // [******************** Mock Upload Function ********************]
@@ -162,6 +200,26 @@ app.get('/about', function (req, res) {
     res.render('about', { pageTestScript: '/qa/tests-about.js' });
 });
 
+app.get('/products', function (req, res) {
+    Tile.find(function (err, tiles) {
+        var context = {
+            tiles: tiles.map(function (tile) {
+                return {
+                    id: tile.id,
+                    name: tile.name,
+                    length: tile.length,
+                    width: tile.width,
+                    price: tile.getPrice(),
+                    inStock: tile.inStock,
+                    icon: tile.icon
+                };
+            })
+        };
+
+        res.render('products', context);
+    });
+});
+
 app.get('/inspirations/virtualroom', function (req, res) {
     res.render('inspirations/virtualroom', { pageTestScript: '/../qa/tests-crosspage.js' });
 });
@@ -177,60 +235,44 @@ app.get('/collections/tile-photos', function (req, res) {
 });
 
 app.post('/collections/tile-photos', function (req, res) {
-    req.session.flash = {
-        type: '',
-        intro: '',
-        message: ''
-    };
-    res.locals.flash = {
-        type: '',
-        intro: '',
-        message: ''
-    };
-    var isAjaxReq = req.xhr;
 
     var form = new formidable.IncomingForm();
     form.parse(req, function (err, fields, files) {
-        var formValues = {
-            name: fields.name,
-            email: fields.email
-        };
-
         if (err) {
-            if (isAjaxReq) { //return json response if it was AJAX call
-                return res.json({ error: 'Error - Something wrong!' });
+            if (req.xhr) { //return json response if it was AJAX call
+                return res.json({ error: 'Something went wrong while processing your request!' });
             }
-            res.locals.flash.type = 'error';
-            res.locals.flash.intro = 'Error - Something wrong!';
-            res.locals.flash.message = 'There was an error with the upload form';
-            return res.render('collections/tile-photos', { form: formValues }); // do not refresh page if validation failed
-            // return res.redirect(303, '/collections/tile-photos');
+            res.session.flash.type = 'error';
+            res.session.flash.intro = 'Something went wrong while processing your request!';
+            res.session.flash.message = 'There was an error with the upload form';
+            // return res.render('collections/tile-photos', { form: formValues }); // do not refresh page if validation failed
+            return res.redirect(303, '/collections/tile-photos');
         }
 
-        if (fields.name === '' || fields.email === '') {
-            if (isAjaxReq) { //return json response if it was AJAX call
-                return res.json({ error: 'Invalid fields!' });
+        if (fields.name === '' || fields.email === '' || files === null) {
+            if (req.xhr) { //return json response if it was AJAX call
+                return res.json({ error: 'All fields are mandatory!' });
             }
-            res.locals.flash.type = 'danger';
-            res.locals.flash.intro = 'Validation error';
-            res.locals.flash.message = 'Fields Name and Email are mandatory';
-            return res.render('collections/tile-photos', { form: formValues }); // do not refresh page if validation failed
-            // return res.redirect(303, '/collections/tile-photos');
+            res.session.flash.type = 'danger';
+            res.session.flash.intro = 'Validation error';
+            res.session.flash.message = 'All fields are mandatory!';
+            // return res.render('collections/tile-photos', { form: formValues }); // do not refresh page if validation failed
+            return res.redirect(303, '/collections/tile-photos');
         }
 
         new UploadImages({ name: fields.name, docs: files }).save(function (error) {
             if (error) {
-                if (isAjaxReq) { //return json response if it was AJAX call
+                if (req.xhr) { //return json response if it was AJAX call
                     return res.json({ error: 'Database error!' });
                 }
                 req.session.flash.type = 'error';
-                req.session.flash.intro = 'Database error!';
+                req.session.flash.intro = 'Upload error!';
                 req.session.flash.message = 'Failed to upload file!';
-                return res.render('collections/tile-photos'); // do not refresh page if validation failed
-                // return res.redirect(303, '/collections/tile-photos');
+                // return res.render('collections/tile-photos'); // do not refresh page if validation failed
+                return res.redirect(303, '/collections/tile-photos');
             }
             // if everything is ok
-            if (isAjaxReq) { //return json response if it was AJAX call
+            if (req.xhr) { //return json response if it was AJAX call
                 return res.json({ success: true });
             }
             req.session.flash.type = 'success';
@@ -263,10 +305,10 @@ function startServer() {
     });
 }
 
-if(require.main === module){
+if (require.main === module) {
     // if application is run directly, start server
     startServer();
-}else{
+} else {
     // if application is imported via require, export function;
     module.exports = startServer;
 }
